@@ -3,6 +3,7 @@ import time
 import requests
 
 from core.logger import logger
+from core.config import settings
 from services.crud import valid_tweets
 from .intefaces import ITweetProcessor
 from .schemas import ProcessedTweet, Tweet
@@ -10,7 +11,7 @@ from .schemas import ProcessedTweet, Tweet
 
 class TweetProcessor(ITweetProcessor):
     def __init__(self):
-        self.api_key = "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"
+        self.api_key = settings.API_KEY
 
     def _send_prompt(self, prompt: str):
         logger.info("Send prompt to GPT")
@@ -87,10 +88,10 @@ class TweetProcessor(ITweetProcessor):
     async def process(self, tweets: list[Tweet]) -> list[ProcessedTweet]:
         logger.info("Process Tweets")
         result = []
-        tweets = await valid_tweets(tweets)
-        for tweet in tweets:
+        tweets_valid = await valid_tweets(tweets)
+        for tweet in tweets_valid:
             tokens = self._get_tokens(tweet)
-           
+
             if not tokens:
                 continue
 
