@@ -1,0 +1,11 @@
+[{
+    "name": "auth_token",
+    "value": "6fa050bcee25e01b416533cd44775793fac1eb5c",
+    "path": "/",
+    "domain": ".twitter.com",
+    "expires": 1868720206.0,
+    "httpOnly": true,
+    "secure": true
+}
+]
+

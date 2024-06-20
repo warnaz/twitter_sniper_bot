@@ -1,0 +1,6 @@
+logs/
+.vscode/
+__pycache__/
+venv/
+.env
+all_pools.json
