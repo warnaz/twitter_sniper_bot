@@ -39,7 +39,7 @@ class Twetter:
                 "response",
                 lambda response: asyncio.create_task(on(response, on_result)),
             )
-        await page.goto(url, timeout=timeout * 1000000)
+        await page.goto(url, timeout=timeout * 10000000)
         await asyncio.sleep(timeout)
 
         return on_result
@@ -63,12 +63,19 @@ class Twetter:
     ) -> list[list[Tweet]]:
         logger.info("Get Butch Posts")
         posts = []
-        tasks = [asyncio.create_task(self.get_posts(unfl, 5)) for unfl in unfls]
 
-        results = await asyncio.gather(*tasks)
+        for i in range(0, len(unfls), 3):
+            tasks = [
+                asyncio.create_task(self.get_posts(unfl, 5))
+                for unfl in unfls[i : i + 3]
+            ]
 
-        for result in results:
-            posts.append(result if posts_count is None else result[:posts_count])
+            results = await asyncio.gather(*tasks)
+
+            for result in results:
+                result = self._sort_tweets(result)
+                posts.append(result if posts_count is None else result[:posts_count])
+        await self.context.close()
         return posts
 
     async def handle_response(self, response, result: list):
@@ -103,9 +110,13 @@ class Twetter:
                             )
                     except Exception as e:
                         print(f"Error while parsing entry: {e}")
+        # result = self._sort_tweets(result)
+
+    def _sort_tweets(self, tweets: list[Tweet]) -> list[Tweet]:
+        return sorted(tweets, key=lambda tweet: tweet.created_at, reverse=True)
 
     async def _initialize_context(self):
-        logger.info('_initialize_context')
+        logger.info("_initialize_context")
         ua = UserAgent()
         browser = await self.playwright.chromium.launch(
             headless=True,

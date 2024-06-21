@@ -8,6 +8,7 @@ load_dotenv()
 
 class Settings(BaseSettings):
     DATABASE_URL: PostgresDsn
+    API_KEY: str
 
     LOG_LEVEL: str = "INFO"
 

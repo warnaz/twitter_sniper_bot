@@ -77,7 +77,10 @@ class TransactionHistory(Base):
     account_id = Column(Integer, ForeignKey("account.id"))
     token_id = Column(Integer, ForeignKey("token.id"))
     amount = Column(Integer, nullable=False)
+    price = Column(Integer, nullable=False)
     gas = Column(Integer, nullable=False)
+    type = Column(String, nullable=False)
+    status = Column(String, nullable=False)
     transaction_hash = Column(String, unique=True, nullable=False)
 
     create_at = Column(Integer, default=lambda: int(time.time()), nullable=False)
