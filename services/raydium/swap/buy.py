@@ -50,7 +50,7 @@ async def get_token_account(ctx,
             return swap_associated_token_address, swap_token_account_Instructions
 
 
-async def buy(solana_client: Client, token_address, payer, amount):
+async def sell_and_buy(solana_client: Client, token_address, payer, amount, sell=None):
     retry_count = 0
 
     while retry_count < MAX_RETRIES:
@@ -73,9 +73,16 @@ async def buy(solana_client: Client, token_address, payer, amount):
                 False, balance_needed, Commitment("confirmed")
             )
 
+            if sell:
+                token_to_buy = WSOL_token_account
+                token_to_sell = swap_associated_token_address
+            else:
+                token_to_buy = swap_associated_token_address
+                token_to_sell = WSOL_token_account
+
             instructions_swap = make_swap_instruction(amount_in,
-                                                      WSOL_token_account,
-                                                      swap_associated_token_address,
+                                                      token_to_buy, 
+                                                      token_to_sell,
                                                       pool_keys,
                                                       mint,
                                                       solana_client,
@@ -147,16 +154,18 @@ async def buy(solana_client: Client, token_address, payer, amount):
     return False
 
 
-async def buy_token(token_address: str, amount_in: float, private_key: str):
+async def buy_token(token_address: str, amount_in: float, private_key: str, sell: bool = False):
     logger.info("Run")
+    logger.critical(f"Buying token: {token_address} with amount: {amount_in}")
 
     payer = Keypair.from_base58_string(private_key)
 
-    buy_transaction = await buy(
+    buy_transaction = await sell_and_buy(
         solana_client=solana_client, 
         token_address=token_address, 
         payer=payer, 
-        amount=amount_in
+        amount=amount_in,
+        sell=sell
     )
-    
+
     logger.info(buy_transaction)
