@@ -28,12 +28,10 @@ class _TimePeriodsFloat(BaseModel):
     h24: Optional[float] = 0.0
 
 
-class VolumeChangePeriods(_TimePeriodsFloat):
-    ...
+class VolumeChangePeriods(_TimePeriodsFloat): ...
 
 
-class PriceChangePeriods(_TimePeriodsFloat):
-    ...
+class PriceChangePeriods(_TimePeriodsFloat): ...
 
 
 class Liquidity(BaseModel):
@@ -57,3 +55,12 @@ class TokenPair(BaseModel):
     liquidity: Optional[Liquidity] = None
     fdv: Optional[float] = 0.0
     pair_created_at: Optional[dt.datetime] = Field(None, alias="pairCreatedAt")
+
+
+class SellToken(BaseModel):
+    address: str
+    name: str
+    amount: float
+    buy_price: float
+    price_usd: Optional[float] = None
+    price_native: float

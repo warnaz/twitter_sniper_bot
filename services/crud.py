@@ -68,6 +68,12 @@ async def get_all_tweets() -> list[Tweet]:
         return result.scalars().all()
 
 
+async def get_tokens_by_ids(token_ids: list[int]) -> list[Token]:
+    async with SessionLocal() as session:
+        result = await session.execute(select(Token).where(Token.id.in_(token_ids)))
+        return result.scalars().all()
+
+
 async def get_transactions(
     session: AsyncSession, token_ids: list[int]
 ) -> list[TransactionHistory]:
@@ -112,4 +118,17 @@ async def valid_tweets(tweets: list[TweetSchema]) -> list[TweetSchema]:
 async def get_accounts() -> list[Account]:
     async with SessionLocal() as session:
         result = await session.execute(select(Account))
+        return result.scalars().all()
+
+
+async def get_transaction_history() -> list[TransactionHistory]:
+    async with SessionLocal() as session:
+        result = await session.execute(
+            select(TransactionHistory).where(
+                and_(
+                    TransactionHistory.type == "buy",
+                    TransactionHistory.status == "READY_TO_SELL",
+                )
+            )
+        )
         return result.scalars().all()
