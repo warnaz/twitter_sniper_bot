@@ -33,6 +33,7 @@ class Twetter:
         on_result: Optional[list] = None,
         timeout: Optional[int] = 2,
     ):
+        asyncio.sleep(randint(1, 30))
         page = await self._create_page()
 
         if on:
@@ -47,7 +48,6 @@ class Twetter:
 
     async def get_posts(self, unfl: str, timeout=None) -> list[Tweet]:
         result = []
-        asyncio.sleep(randint(1, 30))
         await self.open(
             f"https://twitter.com/{unfl}",
             timeout=timeout,
@@ -55,8 +55,6 @@ class Twetter:
             on=self.handle_response,
         )
         logger.info(f"Get Posts: {unfl}")
-        await asyncio.sleep(5)
-
         return result
 
     async def get_butch_posts(
