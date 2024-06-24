@@ -14,7 +14,7 @@ async def process_tweets():
     twetter = Twetter(
         # "6fa050bcee25e01b416533cd44775793fac1eb5c",
         None,
-        "alimamedzzz:kHbm8ZCqqc@185.212.205.150:59100",
+        "alimamedzzz:kHbm8ZCqqc@103.80.86.39:59100",
     )
     await twetter.start()
 

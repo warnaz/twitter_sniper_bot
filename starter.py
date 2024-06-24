@@ -2,7 +2,9 @@ import asyncio
 
 from services.dexscreener.run_screener import find_tokens_addresses, check_tokens_price
 from services.twetter.run_twetter import process_tweets
-from services.raydium.swap.buy import buy_token, sell
+from services.raydium.swap.buy import buy_token
+
+from services.crud import insert_transaction_history
 
 from core.config import PRIVATE_KEY
 from core.logger import logger
@@ -12,13 +14,23 @@ async def start():
     while True:
         logger.info("Start")
         await process_tweets()
-        token_addresses = await find_tokens_addresses()
+        tokens_addr_price: dict = await find_tokens_addresses()
+        amount_in = 0.001115797
 
-        for token_address in token_addresses:
-            await buy_token(
-                token_address=token_address,
-                amount_in=0.001115797,
+        for token in tokens_addr_price:
+            message, txid_string_sig = await buy_token(
+                token_address=tokens_addr_price[token]["address"],
+                amount_in=amount_in,
                 private_key=PRIVATE_KEY,
+            )
+
+            await insert_transaction_history(
+                token_id=tokens_addr_price[token]["address"],
+                price=tokens_addr_price[token]["price_usd"],
+                amount=amount_in,
+                type="buy",
+                status="READY_TO_SELL",
+                transaction_hash=txid_string_sig
             )
 
         sell_tokens = await check_tokens_price()
@@ -28,10 +40,11 @@ async def start():
 
             sell_amount = curetn_amount - (curetn_amount - amount)
 
-            await sell(
+            await buy_token(
                 token_address=token.address,
                 amount_in=sell_amount,
                 private_key=PRIVATE_KEY,
+                sell=True
             )
 
         await asyncio.sleep(60)

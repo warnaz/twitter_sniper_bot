@@ -23,6 +23,7 @@ from loguru import logger
 from dotenv import dotenv_values
 
 from services.raydium.utils.create_close_account import fetch_pool_keys, make_swap_instruction
+from database import TransactionHistory
 from ..config import GAS_LIMIT, GAS_PRICE, MAX_RETRIES, LAMPORTS_PER_SOL, RETRY_DELAY
 
 
@@ -52,6 +53,7 @@ async def get_token_account(ctx,
 
 async def sell_and_buy(solana_client: Client, token_address, payer, amount, sell=None):
     retry_count = 0
+    txid_string_sig = None
 
     while retry_count < MAX_RETRIES:
         try:
@@ -119,39 +121,43 @@ async def sell_and_buy(solana_client: Client, token_address, payer, amount, sell
 
             if confirmation_resp.value[0].err == None and str(
                     confirmation_resp.value[0].confirmation_status) == "TransactionConfirmationStatus.Confirmed":
-                print("Transaction Confirmed")
-                print(f"Transaction Signature: https://solscan.io/tx/{txid_string_sig}")
 
-                return
+                tx_hash_url = 'https://solscan.io/tx/{txid_string_sig}'
+                message = f"Transaction Confirmed. Transaction Signature: {tx_hash_url}"
+                print(message)
+                return message, tx_hash_url
 
             else:
-                print("Transaction not confirmed")
-                return False
+                message = f"Transaction Failed."
+                logger.error(message)
+                return message, txid_string_sig
+
         except asyncio.TimeoutError:
-            print("Transaction confirmation timed out. Retrying...")
+            logger.error("Transaction confirmation timed out. Retrying...")
             retry_count += 1
             time.sleep(RETRY_DELAY)
         except RPCException as e:
-            print(f"RPC Error: [{e.args[0]}]... Retrying...")
+            logger.error(f"RPC Error: [{e.args[0]}]... Retrying...")
             retry_count += 1
             time.sleep(RETRY_DELAY)
         except Exception as e:
             if "block height exceeded" in str(e):
-                print("Transaction has expired due to block height exceeded. Retrying...")
+                logger.error("Transaction has expired due to block height exceeded. Retrying...")
                 retry_count += 1
                 await asyncio.sleep(RETRY_DELAY)
             else:
-                raise e
-                print(f"Unhandled exception: {e}. Retrying...")
+                logger.error(f"Unhandled exception: {e}. Retrying...")
                 retry_count += 1
                 await asyncio.sleep(RETRY_DELAY)
+
         # except Exception as e:
         #     print(f"Unhandled exception: {e}. Retrying...")
         #     retry_count = MAX_RETRIES
         #     return False
 
-    print("Failed to confirm transaction after maximum retries.")
-    return False
+    message = 'Failed to confirm transaction after maximum retries'
+    logger.error(message)
+    return message, txid_string_sig
 
 
 async def buy_token(token_address: str, amount_in: float, private_key: str, sell: bool = False):
@@ -160,12 +166,13 @@ async def buy_token(token_address: str, amount_in: float, private_key: str, sell
 
     payer = Keypair.from_base58_string(private_key)
 
-    buy_transaction = await sell_and_buy(
-        solana_client=solana_client, 
-        token_address=token_address, 
-        payer=payer, 
+    message, txid_string_sig = await sell_and_buy(
+        solana_client=solana_client,
+        token_address=token_address,
+        payer=payer,
         amount=amount_in,
         sell=sell
     )
 
-    logger.info(buy_transaction)
+    return message, txid_string_sig
+

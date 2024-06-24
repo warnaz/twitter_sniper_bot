@@ -62,6 +62,39 @@ async def insert_tweets(tweets: list[ProcessedTweet]) -> list[Tweet]:
     return tweets
 
 
+async def insert_transaction_history(
+        token_id: str, amount: int, price: int, type: str, status: str, transaction_hash: str
+) -> None:
+    async with SessionLocal() as session:
+        account = await get_first_account_from_db()
+        token = await session.execute(select(Token).where(Token.id == token_id))
+
+        transaction = TransactionHistory(
+            account=account,
+            token_id=token,
+            amount=amount,
+            price=price,
+            gas=1_000_000,
+            type=type,
+            status=status,
+            transaction_hash=transaction_hash
+        )
+
+        session.add(transaction)
+        await session.commit()
+
+
+async def get(obj, session: AsyncSession, **kwargs) -> list:
+    result = await session.execute(select(obj).filter_by(**kwargs))
+    return result.scalars().all()
+
+    
+async def get_first_account_from_db() -> Account:
+    async with SessionLocal() as session:
+        result = await session.execute(select(Account))
+        return result.scalars().first()
+
+
 async def get_all_tweets() -> list[Tweet]:
     async with SessionLocal() as session:
         result = await session.execute(select(Tweet))
