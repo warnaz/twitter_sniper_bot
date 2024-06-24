@@ -2,6 +2,7 @@ import json
 import asyncio
 from typing import Optional
 from datetime import datetime
+from random import randint
 
 from fake_useragent import UserAgent
 from playwright.async_api import async_playwright
@@ -46,6 +47,7 @@ class Twetter:
 
     async def get_posts(self, unfl: str, timeout=None) -> list[Tweet]:
         result = []
+        asyncio.sleep(randint(1, 30))
         await self.open(
             f"https://twitter.com/{unfl}",
             timeout=timeout,
@@ -53,6 +55,7 @@ class Twetter:
             on=self.handle_response,
         )
         logger.info(f"Get Posts: {unfl}")
+        await asyncio.sleep(5)
 
         return result
 
@@ -80,13 +83,15 @@ class Twetter:
 
     async def handle_response(self, response, result: list):
         try:
-            if "UserTweets" in response.url:
+            if response.status == 200 and "UserTweets" in response.url:
                 response_body = await response.text()
                 self.parse_posts(json.loads(response_body), result)
+
         except Exception as e:
             print(f"Error while processing response: {e}")
 
     def parse_posts(self, data, result: list):
+        logger.info("Parse Posts")
         timelines = data["data"]["user"]["result"]["timeline_v2"]["timeline"]
         for instruction in timelines["instructions"]:
             if instruction["type"] == "TimelineAddEntries":
@@ -119,7 +124,7 @@ class Twetter:
         logger.info("_initialize_context")
         ua = UserAgent()
         browser = await self.playwright.chromium.launch(
-            headless=True,
+            headless=False,
             proxy=self.proxy,
         )
 
