@@ -56,11 +56,15 @@ async def find_tokens_addresses():
     tokens_to_buy = []
     tokens_addr = []
 
+    total = 0
     for token in tokens:
+        logger.critical(total)
+        total += 1
+
         token_info = await client.search_pairs_async(token.name)
 
         if not token_info:
-            non_existent_tokens.append(token)
+            non_existent_tokens.append(token.name)
             continue
 
         for i in token_info:
@@ -68,12 +72,9 @@ async def find_tokens_addresses():
                 continue
 
             token_date = i.pair_created_at.replace(tzinfo=None)
-            print(token_date)
+            print('token_data', token_date, "chain", i.chain_id)
 
-            if (
-                i.chain_id == "solana"
-                and token_date > datetime.datetime.now() - datetime.timedelta(days=3)
-            ):
+            if i.chain_id == "solana" and token_date > datetime.datetime.now() - datetime.timedelta(days=3):
                 print(i.pair_created_at)
                 logger.info(f"Token Symbol: {token.name}")
                 logger.info(f"Token Address: {i.base_token.address}")
