@@ -1,3 +1,4 @@
+from loguru import logger
 import requests
 from typing import Union
 import aiohttp
@@ -27,6 +28,10 @@ class HttpClient:
 
         async with self._limiter:
             async with aiohttp.ClientSession() as session:
+                print(f"Requesting {method} {url}")
                 async with session.request(method, url, **kwargs) as response:
-                    return await response.json()
 
+                    if response.status != 200:
+                        logger.error(f"Request failed with status {response.status}")
+
+                    return await response.json()

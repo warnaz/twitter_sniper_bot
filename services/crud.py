@@ -5,9 +5,22 @@ from .twetter.schemas import ProcessedTweet
 from .twetter.schemas import Tweet as TweetSchema
 from core.logger import logger
 
-from sqlalchemy import select, update, and_
+from sqlalchemy import delete, select, update, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
+
+
+async def delete_data_from_db() -> None:
+    flag = input("Are you sure you want to delete all data?: (y/n) ")
+    
+    if flag != "y":
+        async with SessionLocal() as session:
+            await session.execute(delete(TweetToken))
+            await session.execute(delete(Tweet))
+            await session.execute(delete(Token))
+            await session.execute(delete(TransactionHistory))
+            await session.execute(delete(Account))
+            await session.commit()
 
 async def check_tweet_exists(session: AsyncSession, tweet_id: int) -> bool:
     result = await session.execute(select(Tweet).where(Tweet.tweet_id == tweet_id))
@@ -110,10 +123,13 @@ async def get_tokens_by_ids(token_ids: list[int]) -> list[Token]:
 async def get_transactions(
     session: AsyncSession, token_ids: list[int]
 ) -> list[TransactionHistory]:
-    result = await session.execute(
-        select(TransactionHistory).where(TransactionHistory.token_id.in_(token_ids))
-    )
-    return result.scalars().all()
+    try:
+        result = await session.execute(
+            select(TransactionHistory).where(TransactionHistory.token_id.in_(token_ids))
+        )
+        return result.scalars().all()
+    except Exception as e:
+        return []
 
 
 async def get_actual_tokens() -> list[Token]:
@@ -127,7 +143,7 @@ async def get_actual_tokens() -> list[Token]:
         )
 
         tokens = result.scalars().all()
-
+    
         transaction = await get_transactions(
             session=session, token_ids=[t.id for t in tokens]
         )
@@ -155,13 +171,16 @@ async def get_accounts() -> list[Account]:
 
 
 async def get_transaction_history() -> list[TransactionHistory]:
-    async with SessionLocal() as session:
-        result = await session.execute(
-            select(TransactionHistory).where(
-                and_(
-                    TransactionHistory.type == "buy",
-                    TransactionHistory.status == "READY_TO_SELL",
+    try:
+        async with SessionLocal() as session:
+            result = await session.execute(
+                select(TransactionHistory).where(
+                    and_(
+                        TransactionHistory.type == "buy",
+                        TransactionHistory.status == "READY_TO_SELL",
+                    )
                 )
             )
-        )
-        return result.scalars().all()
+            return result.scalars().all()
+    except Exception as e:
+        return []

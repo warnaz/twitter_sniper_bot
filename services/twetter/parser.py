@@ -33,7 +33,7 @@ class Twetter:
         on_result: Optional[list] = None,
         timeout: Optional[int] = 2,
     ):
-        asyncio.sleep(randint(1, 30))
+        await asyncio.sleep(randint(1, 30))
         page = await self._create_page()
 
         if on:
@@ -89,7 +89,6 @@ class Twetter:
             print(f"Error while processing response: {e}")
 
     def parse_posts(self, data, result: list):
-        logger.info("Parse Posts")
         timelines = data["data"]["user"]["result"]["timeline_v2"]["timeline"]
         for instruction in timelines["instructions"]:
             if instruction["type"] == "TimelineAddEntries":
@@ -122,7 +121,7 @@ class Twetter:
         logger.info("_initialize_context")
         ua = UserAgent()
         browser = await self.playwright.chromium.launch(
-            headless=False,
+            headless=True,
             proxy=self.proxy,
         )
 

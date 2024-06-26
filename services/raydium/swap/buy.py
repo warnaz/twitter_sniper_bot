@@ -60,16 +60,19 @@ async def sell_and_buy(solana_client: Client, token_address, payer, amount, sell
             logger.info("Start try")
             # token_symbol, SOl_Symbol = getSymbol(token_address)
             mint = Pubkey.from_string(token_address)
+            
             logger.info("Fetch pool keys")
             pool_keys = fetch_pool_keys(str(mint))
+            
             amount_in = int(amount * LAMPORTS_PER_SOL)
             logger.info(f"Amount in: {amount_in}")
+
             accountProgramId = solana_client.get_account_info_json_parsed(mint)
-            logger.info(accountProgramId)
             TOKEN_PROGRAM_ID = accountProgramId.value.owner
 
             balance_needed = Token.get_min_balance_rent_for_exempt_for_account(solana_client)
             swap_associated_token_address, swap_token_account_Instructions = await get_token_account(async_solana_client,payer.pubkey(),mint)
+
             WSOL_token_account, swap_tx, payer, Wsol_account_keyPair, opts, = _TokenCore._create_wrapped_native_account_args(
                 TOKEN_PROGRAM_ID, payer.pubkey(), payer, amount_in,
                 False, balance_needed, Commitment("confirmed")
@@ -102,31 +105,28 @@ async def sell_and_buy(solana_client: Client, token_address, payer, amount, sell
             swap_tx.add(instructions_swap, unit_price_ix, unit_limit_ix, closeAcc)
             txn = solana_client.send_transaction(swap_tx, payer,Wsol_account_keyPair)
             txid_string_sig = txn.value
+            
             if txid_string_sig:
                 print("Transaction sent")
                 # print(f"Transaction Signature Waiting to be confirmed: https://solscan.io/tx/{txid_string_sig}")
                 print("Waiting Confirmation")
 
             await asyncio.sleep(2.5)
-            logger.info("Confirm_transaction")
-            logger.info(txid_string_sig)
 
+            logger.info("Confirm_transaction")
             confirmation_resp = solana_client.confirm_transaction(
                 txid_string_sig,
                 commitment=Confirmed,
                 sleep_seconds=1,
             )
 
-            logger.info(confirmation_resp)
-
             if confirmation_resp.value[0].err == None and str(
                     confirmation_resp.value[0].confirmation_status) == "TransactionConfirmationStatus.Confirmed":
 
-                tx_hash_url = 'https://solscan.io/tx/{txid_string_sig}'
+                tx_hash_url = f'https://solscan.io/tx/{txid_string_sig}'
                 message = f"Transaction Confirmed. Transaction Signature: {tx_hash_url}"
-                print(message)
+                logger.success(message)
                 return message, tx_hash_url
-
             else:
                 message = f"Transaction Failed."
                 logger.error(message)

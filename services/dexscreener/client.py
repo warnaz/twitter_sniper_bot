@@ -1,3 +1,4 @@
+from loguru import logger
 from .models import TokenPair
 from .http_client import HttpClient
 from typing import Optional
@@ -61,8 +62,12 @@ class DexscreenerClient:
         return [TokenPair(**pair) for pair in resp.get("pairs", [])]
 
     async def search_pairs_async(self, search_query: str) -> list[TokenPair]:
-        """
-        Async version of `search_pairs`
-        """
-        resp = await self._client.request_async("GET", f"dex/search/?q={search_query}")        
-        return [TokenPair(**pair) for pair in resp.get("pairs", [])]
+        try:
+            """
+            Async version of `search_pairs`
+            """
+            resp = await self._client.request_async("GET", f"dex/search/?q={search_query}")  
+            return [TokenPair(**pair) for pair in resp.get("pairs", [])]
+        except Exception as e:
+            logger.error(e)
+            return []

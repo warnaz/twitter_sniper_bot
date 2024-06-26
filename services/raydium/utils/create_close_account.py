@@ -73,7 +73,6 @@ def sell_get_token_account(ctx,
 
 def extract_pool_info(pools_list: list, mint: str) -> dict:
     for pool in pools_list:
-
         if pool['baseMint'] == mint and pool['quoteMint'] == 'So11111111111111111111111111111111111111112':
             return pool
         elif pool['quoteMint'] == mint and pool['baseMint'] == 'So11111111111111111111111111111111111111112':
@@ -85,20 +84,27 @@ def fetch_pool_keys(mint: str):
     amm_info = {}
     all_pools = {}
     try:
-        # Using this so it will be faster else no option, we go the slower way.
         with open('all_pools.json', 'r') as file:
+            logger.info("Get pools from json file")
             all_pools = json.load(file)
+            logger.success("Success")
         amm_info = extract_pool_info(all_pools, mint)
-    except:
+    except Exception as e:
+        # raise e
+        logger.info("Get pools from API")
         resp = requests.get('https://api.raydium.io/v2/sdk/liquidity/mainnet.json', stream=True)
+        logger.info("Final Response: " + str(resp))
         pools = resp.json()
+        logger.info("Pools")
         official = pools['official']
         unofficial = pools['unOfficial']
         all_pools = official + unofficial
 
         # Store all_pools in a JSON file
         with open('all_pools.json', 'w') as file:
+            logger.info("Dumping all_pools.json")
             json.dump(all_pools, file)
+            logger.info("Success")
         try:
             amm_info = extract_pool_info(all_pools, mint)
         except:
