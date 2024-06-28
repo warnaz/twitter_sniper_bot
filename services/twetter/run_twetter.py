@@ -35,11 +35,10 @@ async def process_tweets():
 
     infls_tweets = await twetter.get_butch_posts(infls, posts_count=2)
 
+    processor = TweetProcessor()
     processed_tweets: list[ProcessedTweet] = []
 
     for tweets in infls_tweets:
-        processor = TweetProcessor()
-
         processed_tweets.extend(await processor.process(tweets))
 
     logger.info("Insert Tweets to DataBase")
