@@ -1,6 +1,8 @@
 import re
 import time
+import httpx
 import requests
+from openai import OpenAI
 
 from core.logger import logger
 from core.config import settings
@@ -9,16 +11,54 @@ from .intefaces import ITweetProcessor
 from .schemas import ProcessedTweet, Tweet
 
 
+proxies={
+        "http": "http://dkhalidovstt:VBNsY2BRZW@185.248.51.166:59100",
+        "https": "https://dkhalidovstt:VBNsY2BRZW@185.248.51.166:59100",
+}
+_http_client = httpx.Client(proxy='http://dkhalidovstt:VBNsY2BRZW@185.248.51.166:59100')
+openai = OpenAI(api_key=settings.API_KEY, http_client=_http_client)
+
+
 class TweetProcessor(ITweetProcessor):
     def __init__(self):
         self.api_key = settings.API_KEY
 
     def _send_prompt(self, prompt: str):
         logger.info("Send prompt to GPT")
+        response = openai.chat.completions.create(
+            model='gpt-4o',
+            messages=[
+                {"role": "system", "content": "You are a helpful AI travel assistant. You will give advices about places to visit"},
+                {"role": "user", "content": prompt[0]}
+            ]
+        )
+        advice = response.choices[0].message.content
+        return advice
+
+    def old_send_prompt(self, prompt: str):
+        model = 'gpt-4o'
+        old_model = 'gpt-3.5-turbo-instruct'
+
+        logger.info("Send prompt to GPT")
+        # payload = {
+        #     "model": model,
+        #     "prompt": prompt,
+        #     "max_tokens": 15,
+        # }
         payload = {
-            "model": "gpt-3.5-turbo-instruct",
-            "prompt": prompt,
-            "max_tokens": 15,
+            "model": "gpt-4o",
+            "response_format": {"type": "json_object"},
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant designed to output JSON."
+                },
+                {
+                    "role": "user",
+                    "content": (prompt)
+                }
+            ],
+            "max_tokens": 300
         }
         headers = {
             "Content-Type": "application/json",
