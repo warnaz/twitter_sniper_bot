@@ -125,6 +125,15 @@ class TweetProcessor(ITweetProcessor):
         cleaned_tokens = [delete_symbols.sub("", token) for token in tokens]
         return list(filter(None, cleaned_tokens))
 
+    def find_token_by_symbol(self, text: str, symbols: list[str]):
+        tokens = []
+        words = text.split()
+        for word in words:
+            for symbol in symbols:
+                if word.startswith(symbol):
+                    tokens.append(word)
+        return tokens
+
     async def process(self, tweets: list[Tweet]) -> list[ProcessedTweet]:
         logger.info("Process Tweets")
         result = []
@@ -132,7 +141,10 @@ class TweetProcessor(ITweetProcessor):
 
         logger.info(f"Send new {len(tweets_valid)} tweets to GPT")
         for tweet in tweets_valid:
-            tokens = self._get_tokens(tweet)
+            tokens_by_gpt = self._get_tokens(tweet)
+            tokens_by_symbol = self.find_token_by_symbol(tweet.text, ["$"])
+
+            tokens = list(set(tokens_by_gpt + tokens_by_symbol))
 
             if not tokens:
                 continue
