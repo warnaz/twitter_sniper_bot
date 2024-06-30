@@ -58,7 +58,6 @@ async def sell_and_buy(solana_client: Client, token_address, payer, amount, sell
     while retry_count < MAX_RETRIES:
         try:
             logger.info("Start try")
-            # token_symbol, SOl_Symbol = getSymbol(token_address)
             mint = Pubkey.from_string(token_address)
             
             logger.info("Fetch pool keys")
@@ -71,14 +70,14 @@ async def sell_and_buy(solana_client: Client, token_address, payer, amount, sell
             TOKEN_PROGRAM_ID = accountProgramId.value.owner
 
             balance_needed = Token.get_min_balance_rent_for_exempt_for_account(solana_client)
-            swap_associated_token_address, swap_token_account_Instructions = await get_token_account(async_solana_client,payer.pubkey(),mint)
+            swap_associated_token_address, swap_token_account_Instructions = await get_token_account(async_solana_client, payer.pubkey(), mint)
 
             WSOL_token_account, swap_tx, payer, Wsol_account_keyPair, opts, = _TokenCore._create_wrapped_native_account_args(
                 TOKEN_PROGRAM_ID, payer.pubkey(), payer, amount_in,
                 False, balance_needed, Commitment("confirmed")
             )
 
-            if sell:
+            if not sell:
                 token_to_buy = WSOL_token_account
                 token_to_sell = swap_associated_token_address
             else:
@@ -103,9 +102,9 @@ async def sell_and_buy(solana_client: Client, token_address, payer, amount, sell
             unit_limit_ix = set_compute_unit_limit(GAS_LIMIT)
 
             swap_tx.add(instructions_swap, unit_price_ix, unit_limit_ix, closeAcc)
-            txn = solana_client.send_transaction(swap_tx, payer,Wsol_account_keyPair)
+            txn = solana_client.send_transaction(swap_tx, payer, Wsol_account_keyPair)
             txid_string_sig = txn.value
-            
+
             if txid_string_sig:
                 print("Transaction sent")
                 # print(f"Transaction Signature Waiting to be confirmed: https://solscan.io/tx/{txid_string_sig}")

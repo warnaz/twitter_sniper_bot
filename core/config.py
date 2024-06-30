@@ -17,6 +17,7 @@ class Settings(BaseSettings):
 settings = Settings()
 
 PRIVATE_KEY = os.getenv("PRIVATE_KEY")
+PROXY = os.getenv("PROXY")
 
 FAKE_TOKENS = [
     'BTC', 'ETH', 'USDT', 'USDC', 'BNB', 'ADA', 'DOGE', 'XRP', 'DOT', 'UNI',

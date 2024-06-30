@@ -5,17 +5,14 @@ import requests
 from openai import OpenAI
 
 from core.logger import logger
-from core.config import settings
+from core.config import settings, PROXY
 from services.crud import valid_tweets
 from .intefaces import ITweetProcessor
 from .schemas import ProcessedTweet, Tweet
 
 
-proxies={
-        "http": "http://dkhalidovstt:VBNsY2BRZW@185.248.51.166:59100",
-        "https": "https://dkhalidovstt:VBNsY2BRZW@185.248.51.166:59100",
-}
-_http_client = httpx.Client(proxy='http://dkhalidovstt:VBNsY2BRZW@185.248.51.166:59100')
+
+_http_client = httpx.Client(proxy=PROXY)
 openai = OpenAI(api_key=settings.API_KEY, http_client=_http_client)
 
 

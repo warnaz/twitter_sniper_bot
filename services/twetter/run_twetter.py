@@ -19,18 +19,39 @@ async def process_tweets():
     await twetter.start()
 
     infls = [
-        "SolanaSensei",
         "cozypront",
         "Solana_Emperor",
         "CryptoGodJohn",
         "leonardnftpage",
         "MoonOverlord",
         "CryptoAnglio",
-        "SolanaLegend",
         "solana_king",
         "SolJakey",
         "0xDekadente",
         "ASTAlavistaSOL",
+        "SolanaSensei", 
+        "SOLBigBrain", 
+        "SolanaLegend", 
+        "3orovik", 
+        "sibeleth", 
+        "Rewkang", 
+        "crypto_bitlord7", 
+        "farokh", 
+        "rajgokal", 
+        "seedphrase", 
+        "0xMert_", 
+        "GordonGoner", 
+        "notthreadguy", 
+        "beaniemaxi", 
+        "IvanOnTech", 
+        "SpiderCrypto0x", 
+        "Noahhweb3", 
+        "kenwgmi", 
+        "oCalebSol", 
+        "itstylersays", 
+        "MrBigWhaleREAL", 
+        "shahh", 
+        "MinisterOfNFTs"
     ]
 
     infls_tweets = await twetter.get_butch_posts(infls, posts_count=2)
