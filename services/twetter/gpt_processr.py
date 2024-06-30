@@ -23,18 +23,21 @@ class TweetProcessor(ITweetProcessor):
     def _send_prompt(self, prompt: str):
         logger.info("Send prompt to GPT")
         response = openai.chat.completions.create(
-            model='gpt-4o',
+            model="gpt-4o",
             messages=[
-                {"role": "system", "content": "You are a helpful AI travel assistant. You will give advices about places to visit"},
-                {"role": "user", "content": prompt[0]}
-            ]
+                {
+                    "role": "system",
+                    "content": "You are a helpful AI travel assistant. You will give advices about places to visit",
+                },
+                {"role": "user", "content": prompt[0]},
+            ],
         )
         advice = response.choices[0].message.content
         return advice
 
     def old_send_prompt(self, prompt: str):
-        model = 'gpt-4o'
-        old_model = 'gpt-3.5-turbo-instruct'
+        model = "gpt-4o"
+        old_model = "gpt-3.5-turbo-instruct"
 
         logger.info("Send prompt to GPT")
         # payload = {
@@ -48,14 +51,11 @@ class TweetProcessor(ITweetProcessor):
             "messages": [
                 {
                     "role": "system",
-                    "content": "You are a helpful assistant designed to output JSON."
+                    "content": "You are a helpful assistant designed to output JSON.",
                 },
-                {
-                    "role": "user",
-                    "content": (prompt)
-                }
+                {"role": "user", "content": (prompt)},
             ],
-            "max_tokens": 300
+            "max_tokens": 300,
         }
         headers = {
             "Content-Type": "application/json",
@@ -122,12 +122,26 @@ class TweetProcessor(ITweetProcessor):
         cleaned_tokens = [delete_symbols.sub("", token) for token in tokens]
         return list(filter(None, cleaned_tokens))
 
+    def find_token_by_symbol(self, text: str, symbols: list[str]):
+        tokens = []
+        words = text.split()
+        for word in words:
+            for symbol in symbols:
+                if word.startswith(symbol):
+                    tokens.append(word)
+        return tokens
+
     async def process(self, tweets: list[Tweet]) -> list[ProcessedTweet]:
         logger.info("Process Tweets")
         result = []
         tweets_valid = await valid_tweets(tweets)
+
+        logger.info(f"Send new {len(tweets_valid)} tweets to GPT")
         for tweet in tweets_valid:
-            tokens = self._get_tokens(tweet)
+            tokens_by_gpt = self._get_tokens(tweet)
+            tokens_by_symbol = self.find_token_by_symbol(tweet.text, ["$"])
+
+            tokens = list(set(tokens_by_gpt + tokens_by_symbol))
 
             if not tokens:
                 continue
