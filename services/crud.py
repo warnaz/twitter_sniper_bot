@@ -1,6 +1,14 @@
 import time
 
-from database import Tweet, TweetToken, Token, SessionLocal, TransactionHistory, Account
+from database import (
+    Tweet,
+    TweetToken,
+    Token,
+    SessionLocal,
+    TransactionHistory,
+    Account,
+    Infl,
+)
 from .twetter.schemas import ProcessedTweet
 from .twetter.schemas import Tweet as TweetSchema
 from core.logger import logger
@@ -9,10 +17,9 @@ from sqlalchemy import delete, select, update, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-
 async def delete_data_from_db() -> None:
     flag = input("Are you sure you want to delete all data?: (y/n) ")
-    
+
     if flag != "y":
         async with SessionLocal() as session:
             await session.execute(delete(TweetToken))
@@ -21,6 +28,7 @@ async def delete_data_from_db() -> None:
             await session.execute(delete(TransactionHistory))
             await session.execute(delete(Account))
             await session.commit()
+
 
 async def check_tweet_exists(session: AsyncSession, tweet_id: int) -> bool:
     result = await session.execute(select(Tweet).where(Tweet.tweet_id == tweet_id))
@@ -76,7 +84,12 @@ async def insert_tweets(tweets: list[ProcessedTweet]) -> list[Tweet]:
 
 
 async def insert_transaction_history(
-        token_id: str, amount: int, price: int, type: str, status: str, transaction_hash: str
+    token_id: str,
+    amount: int,
+    price: int,
+    type: str,
+    status: str,
+    transaction_hash: str,
 ) -> None:
     async with SessionLocal() as session:
         account = await get_first_account_from_db()
@@ -90,7 +103,7 @@ async def insert_transaction_history(
             gas=1_000_000,
             type=type,
             status=status,
-            transaction_hash=transaction_hash
+            transaction_hash=transaction_hash,
         )
 
         session.add(transaction)
@@ -101,7 +114,7 @@ async def get(obj, session: AsyncSession, **kwargs) -> list:
     result = await session.execute(select(obj).filter_by(**kwargs))
     return result.scalars().all()
 
-    
+
 async def get_first_account_from_db() -> Account:
     async with SessionLocal() as session:
         result = await session.execute(select(Account))
@@ -143,7 +156,7 @@ async def get_actual_tokens() -> list[Token]:
         )
 
         tokens = result.scalars().all()
-    
+
         transaction = await get_transactions(
             session=session, token_ids=[t.id for t in tokens]
         )
@@ -184,3 +197,16 @@ async def get_transaction_history() -> list[TransactionHistory]:
             return result.scalars().all()
     except Exception as e:
         return []
+
+
+async def get_infls() -> list[str]:
+    async with SessionLocal() as session:
+        result = await session.execute(select(Infl.name).where(Infl.status == True))
+        return result.scalars().all()
+
+
+async def add_infl(name: str) -> None:
+    async with SessionLocal() as session:
+        infl = Infl(name=name, status=True)
+        session.add(infl)
+        await session.commit()

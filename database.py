@@ -11,6 +11,7 @@ from sqlalchemy import (
     String,
     Update,
     ForeignKey,
+    Boolean,
 )
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -68,6 +69,14 @@ class Account(Base):
     id = Column(Integer, primary_key=True, index=True)
     address = Column(String, unique=True, nullable=False)
     private_key = Column(String, unique=True, nullable=False)
+
+
+class Infl(Base):
+    __tablename__ = "infl"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, nullable=False)
+    status = Column(Boolean, nullable=False, default=True)
 
 
 class TransactionHistory(Base):

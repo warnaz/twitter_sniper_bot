@@ -1,7 +1,7 @@
 import asyncio
 
 from services.twetter.schemas import Tweet
-from services.crud import insert_tweets
+from services.crud import insert_tweets, get_infls, add_infl
 from services.twetter.parser import Twetter
 from services.twetter.schemas import ProcessedTweet
 from services.twetter.gpt_processr import TweetProcessor
@@ -18,42 +18,46 @@ async def process_tweets():
     )
     await twetter.start()
 
-    infls = [
-        "cozypront",
-        "Solana_Emperor",
-        "CryptoGodJohn",
-        "leonardnftpage",
-        "MoonOverlord",
-        "CryptoAnglio",
-        "solana_king",
-        "SolJakey",
-        "0xDekadente",
-        "ASTAlavistaSOL",
-        "SolanaSensei", 
-        "SOLBigBrain", 
-        "SolanaLegend", 
-        "3orovik", 
-        "sibeleth", 
-        "Rewkang", 
-        "crypto_bitlord7", 
-        "farokh", 
-        "rajgokal", 
-        "seedphrase", 
-        "0xMert_", 
-        "GordonGoner", 
-        "notthreadguy", 
-        "beaniemaxi", 
-        "IvanOnTech", 
-        "SpiderCrypto0x", 
-        "Noahhweb3", 
-        "kenwgmi", 
-        "oCalebSol", 
-        "itstylersays", 
-        "MrBigWhaleREAL", 
-        "shahh", 
-        "MinisterOfNFTs"
-    ]
+    # infls = [
+    #     "cozypront",
+    #     "Solana_Emperor",
+    #     "CryptoGodJohn",
+    #     "leonardnftpage",
+    #     "MoonOverlord",
+    #     "CryptoAnglio",
+    #     "solana_king",
+    #     "SolJakey",
+    #     "0xDekadente",
+    #     "ASTAlavistaSOL",
+    #     "SolanaSensei",
+    #     "SOLBigBrain",
+    #     "SolanaLegend",
+    #     "3orovik",
+    #     "sibeleth",
+    #     "Rewkang",
+    #     "crypto_bitlord7",
+    #     "farokh",
+    #     "rajgokal",
+    #     "seedphrase",
+    #     "0xMert_",
+    #     "GordonGoner",
+    #     "notthreadguy",
+    #     "beaniemaxi",
+    #     "IvanOnTech",
+    #     "SpiderCrypto0x",
+    #     "Noahhweb3",
+    #     "kenwgmi",
+    #     "oCalebSol",
+    #     "itstylersays",
+    #     "MrBigWhaleREAL",
+    #     "shahh",
+    #     "MinisterOfNFTs",
+    # ]
 
+    # for infl in infls:
+    #     await add_infl(infl)
+
+    infls = await get_infls()
     infls_tweets = await twetter.get_butch_posts(infls, posts_count=2)
 
     processor = TweetProcessor()
