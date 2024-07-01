@@ -131,6 +131,9 @@ class TweetProcessor(ITweetProcessor):
         for word in words:
             for symbol in symbols:
                 if word.startswith(symbol):
+                    word = word[len(symbol) :]
+                    if self.is_number(word):
+                        continue
                     tokens.append(word)
         return tokens
 
@@ -158,3 +161,10 @@ class TweetProcessor(ITweetProcessor):
                 )
             )
         return result
+
+    def is_number(self, n):
+        try:
+            float(n)
+            return True
+        except ValueError:
+            return False
